@@ -1,14 +1,14 @@
 # GeoMapper - Docker Instructions
 
-- [[#Introduction|Introduction]]
-- [[#General points|General points]]
-- [[#Installing the docker stack|Installing the docker stack]]
-- [[#Setting up the system|Setting up the system]]
-- [[#Setting up Portainer|Setting up Portainer]]
-- [[#Triggering stack - CLI|Triggering stack - CLI]]
-- [[#Triggering Stack - Portainer|Triggering Stack - Portainer]]
-- [[#Data output|Data output]]
-- [[#Live Visualisation|Live Visualisation]]
+- [Introduction](#introduction)
+- [General points](#general-points)
+- [Installing the docker stack](#installing-the-docker-stack)
+- [Setting up the system](#setting-up-the-system)
+- [Setting up Portainer](#setting-up-portainer)
+- [Triggering stack - CLI](#triggering-stack---cli)
+- [Triggering Stack - Portainer](#triggering-stack---portainer)
+- [Data output](#data-output)
+- [Live Visualisation](#live-visualisation)
 
 ## Introduction
 
