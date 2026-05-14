@@ -1,39 +1,20 @@
-```insta-toc
----
-title:
-  name:
-  level:
-  center:
-exclude:
-style:
-  listType:
-omit:
-levels:
-  min:
-  max:
----
+# GeoMapper - Docker Instructions
 
-# Table of Contents
+- [[#Introduction|Introduction]]
+- [[#General points|General points]]
+- [[#Installing the docker stack|Installing the docker stack]]
+- [[#Setting up the system|Setting up the system]]
+- [[#Setting up Portainer|Setting up Portainer]]
+- [[#Triggering stack - CLI|Triggering stack - CLI]]
+- [[#Triggering Stack - Portainer|Triggering Stack - Portainer]]
+- [[#Data output|Data output]]
+- [[#Live Visualisation|Live Visualisation]]
 
-- Introduction
-- General points
-- Installing the docker stack
-- Setting up the system
-- Setting up Portainer
-- Triggering stack - CLI
-- Triggering Stack - Portainer
-- Data output
-- Live Visualisation
-```
-
-```insta-toc
-```
-
-# Introduction
+## Introduction
 
 This markdown file provides information regarding the setup and usage of the GeoMapper OEM docker image.
 
-# General points
+## General points
 
 - IP address:
   - The IP address of your systems Ethernet end point MUST be `192.168.5.150`
@@ -43,7 +24,7 @@ This markdown file provides information regarding the setup and usage of the Geo
   - The user will be provided with the docker image compiled for the target architecture, ARM64 or AMD64.
   - The target architecture must be communicated to Osprey Systems Engineering at PO.
 
-# Installing the docker stack
+## Installing the docker stack
 
 Docker must be installed on the target machine, the installation of which is beyond the scope of this document. However, straightforward and comprehensive instructions can be found here:
 
@@ -64,7 +45,7 @@ sudo docker image load -i geo_mapper_r1-4_sn-2-147-194_x64.tar
 
 Once this has been completed, the `.tar` file can be removed to save disk space.
 
-# Setting up the system
+## Setting up the system
 
 A `docker-compose.yml` file will be provided along with the tar file, which is used to bring up the GeoMapper docker container.
 
@@ -78,7 +59,7 @@ volumes:
 
 Adjust the `/home/cm5/GeoMapper/data:` portion to the desired path.
 
-# Setting up Portainer
+## Setting up Portainer
 
 Installation of Portainer is beyond the scope of this document, however the online instructions are both straightforward and comprehensive:
 
@@ -126,7 +107,7 @@ De-select Access Control and click the `Deploy the stack` button.
 
 The GeoMapper container will start when the stack is first deployed. See the section titled `Triggering stack - Portainer` for instructions to bring it down.
 
-# Triggering stack - CLI
+## Triggering stack - CLI
 
 To trigger GeoMapper through the CLI, run the following command from the path of the `docker-compose.yml` file:
 
@@ -146,7 +127,7 @@ When a survey has been completed, and the user wishes to bring GeoMapper down an
 sudo docker compose down
 ```
 
-# Triggering Stack - Portainer
+## Triggering Stack - Portainer
 
 In order to start and stop the GeoMapper docker container using Portainer, log into Portainer and navigate to `Stacks`.
 
@@ -164,7 +145,7 @@ GeoMapper is now active. Ensure the device is steady for at least 3 seconds to e
 
 When finished, select the container again and click the stop icon.
 
-# Data output
+## Data output
 
 When the GeoMapper docker container is brought down, it will save the output point cloud to the volume specified in the `docker-compose.yml` file.
 
@@ -176,7 +157,7 @@ scans.pcd
 
 This file will overwrite on subsequent scans.
 
-# Live Visualisation
+## Live Visualisation
 
 Once a mapping session is running, the live output can be visualised through Foxglove Studio.
 
