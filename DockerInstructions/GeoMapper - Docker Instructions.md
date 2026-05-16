@@ -169,7 +169,13 @@ https://foxglove.dev/download
 
 Once installed, and a mapping session is active, open Foxglove Studio.
 
-If this is the first time the application has been opened, a free account will need to be created.
+If this is the first time the application has been opened, a free account will need to be created. It is possible to set up foxglove without an account on the device, this can be done following the instructions here: 
+
+https://docs.foxglove.dev/docs/standalone-license
+
+Layouts for Foxglove can also be created and transferred to the device in question, instructions provided here:
+
+https://docs.foxglove.dev/docs/visualization/layouts
 
 Once set up:
 1. Open the application
