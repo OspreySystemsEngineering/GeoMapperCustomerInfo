@@ -1,14 +1,17 @@
 # GeoMapper - Docker Instructions
 
-- [Introduction](#introduction)
-- [General points](#general-points)
-- [Installing the docker stack](#installing-the-docker-stack)
-- [Setting up the system](#setting-up-the-system)
-- [Setting up Portainer](#setting-up-portainer)
-- [Triggering stack - CLI](#triggering-stack---cli)
-- [Triggering Stack - Portainer](#triggering-stack---portainer)
-- [Data output](#data-output)
-- [Live Visualisation](#live-visualisation)
+- [[#Introduction|Introduction]]
+- [[#General points|General points]]
+- [[#Installing the docker stack|Installing the docker stack]]
+- [[#Setting up the system|Setting up the system]]
+- [[#Setting up Portainer|Setting up Portainer]]
+- [[#Triggering stack - CLI|Triggering stack - CLI]]
+- [[#Triggering Stack - Portainer|Triggering Stack - Portainer]]
+- [[#Data output|Data output]]
+- [[#Live Visualisation|Live Visualisation]]
+- [[#LiDAR temperature monitoring|LiDAR temperature monitoring]]
+- [[#Mapping health and pose covariance|Mapping health and pose covariance]]
+
 
 ## Introduction
 
@@ -205,3 +208,232 @@ It should be noted that visualising many millions of points in real time with la
 The user can drag, rotate and zoom in and out on the 3D visualisation.
 
 When finished, exit the application as normal. Settings will remain persistent.
+
+## LiDAR temperature monitoring
+
+GeoMapper publishes the internal LiDAR core temperature as a ROS topic while the system is running. This can be used to monitor sensor thermal condition during operation. It should be noted that this is the internal temperature, the temperature of the external heat sink will lag this up until equilibrium. 
+
+The temperature topic is:
+
+```text
+/livox/lidar_temperature
+```
+
+The topic uses the standard ROS message type:
+
+```text
+sensor_msgs/Temperature
+```
+
+The temperature value is reported in degrees Celsius.
+
+A typical message will appear similar to:
+
+```yaml
+header:
+  seq: 123
+  stamp:
+    secs: 1781793983
+    nsecs: 123456789
+  frame_id: "livox_frame"
+temperature: 42.35
+variance: 0.0
+```
+
+## Mapping health and pose covariance
+
+GeoMapper publishes odometry information during operation. The odometry message includes a pose covariance matrix, which can be used by downstream systems to estimate localisation uncertainty and provide an indication of mapping health.
+
+The odometry topic is:
+
+```text
+/Odometry
+```
+
+The message type is:
+
+```text
+nav_msgs/Odometry
+```
+
+The pose covariance is contained within:
+
+```text
+/Odometry.pose.covariance
+```
+
+The covariance matrix is published as a 36 element flattened 6x6 matrix using the standard ROS odometry order:
+
+```text
+x, y, z, roll, pitch, yaw
+```
+
+Conceptually, the full pose covariance matrix is:
+
+```text
+P_pose =
+[ x/x      x/y      x/z      x/roll      x/pitch      x/yaw
+  y/x      y/y      y/z      y/roll      y/pitch      y/yaw
+  z/x      z/y      z/z      z/roll      z/pitch      z/yaw
+  roll/x   roll/y   roll/z   roll/roll   roll/pitch   roll/yaw
+  pitch/x  pitch/y  pitch/z  pitch/roll  pitch/pitch  pitch/yaw
+  yaw/x    yaw/y    yaw/z    yaw/roll    yaw/pitch    yaw/yaw ]
+```
+
+The top-left 3x3 block represents position covariance:
+
+```text
+P_position =
+[ Pxx  Pxy  Pxz
+  Pyx  Pyy  Pyz
+  Pzx  Pzy  Pzz ]
+```
+
+The lower-right 3x3 block represents orientation covariance:
+
+```text
+P_orientation =
+[ Prollroll   Prollpitch   Prollyaw
+  Ppitchroll  Ppitchpitch  Ppitchyaw
+  Pyawroll    Pyawpitch    Pyawyaw ]
+```
+
+The diagonal values represent the variance of each pose component. Larger values indicate greater estimated uncertainty in that component of the pose.
+
+For example:
+
+```text
+Pxx:
+  Estimated uncertainty variance in x position.
+
+Pyy:
+  Estimated uncertainty variance in y position.
+
+Pzz:
+  Estimated uncertainty variance in z position.
+
+Prollroll:
+  Estimated uncertainty variance in roll.
+
+Ppitchpitch:
+  Estimated uncertainty variance in pitch.
+
+Pyawyaw:
+  Estimated uncertainty variance in yaw.
+```
+
+The off-diagonal values represent coupling between different pose components. For example, `Pxy` indicates that uncertainty in `x` and `y` is coupled. In many simple checks, downstream systems may initially use only the diagonal values, but the full matrix is available for more advanced analysis.
+
+The covariance matrix provides an indication of the uncertainty estimated by the internal localisation filter. In general terms:
+
+```text
+Small and stable covariance:
+  Localisation is likely to be well constrained.
+
+Increasing covariance:
+  Localisation uncertainty is increasing.
+
+Large X/Y/Z covariance:
+  Translational position uncertainty is increasing.
+
+Large roll/pitch/yaw covariance:
+  Attitude uncertainty is increasing.
+
+Large covariance in one direction:
+  The system may be operating in a geometrically degenerate environment.
+
+Large covariance across multiple axes:
+  The localisation solution may be degraded or unreliable.
+```
+
+For example, long corridors, tunnels, repetitive structures, smooth walls and feature-poor areas can reduce the amount of useful geometric constraint available to GeoMapper. In these conditions, the covariance may increase along the weakly constrained direction.
+
+A corridor is a typical example. The LiDAR may observe the side walls clearly, giving good constraint across the corridor. However, the geometry may be repetitive along the corridor, making the forward direction less well constrained. In this case, the covariance may remain small in the sideways direction while increasing in the forward direction. This indicates directional degradation rather than total localisation failure.
+
+A simplified full pose covariance matrix for this case might appear as:
+
+```text
+P_pose =
+[ 0.0025   0.0000   0.0000   0.0000   0.0000   0.0000
+  0.0000   0.1600   0.0000   0.0000   0.0000   0.0000
+  0.0000   0.0000   0.0040   0.0000   0.0000   0.0000
+  0.0000   0.0000   0.0000   0.0004   0.0000   0.0000
+  0.0000   0.0000   0.0000   0.0000   0.0004   0.0000
+  0.0000   0.0000   0.0000   0.0000   0.0000   0.0025 ]
+```
+
+In this example:
+
+```text
+x variance:
+  0.0025 m^2
+
+y variance:
+  0.1600 m^2
+
+z variance:
+  0.0040 m^2
+
+roll variance:
+  0.0004 rad^2
+
+pitch variance:
+  0.0004 rad^2
+
+yaw variance:
+  0.0025 rad^2
+```
+
+Taking the square root of each diagonal value gives the estimated standard deviation:
+
+```text
+x uncertainty:
+  sqrt(0.0025) = 0.05 m
+
+y uncertainty:
+  sqrt(0.1600) = 0.40 m
+
+z uncertainty:
+  sqrt(0.0040) = 0.063 m
+
+roll uncertainty:
+  sqrt(0.0004) = 0.020 rad
+
+pitch uncertainty:
+  sqrt(0.0004) = 0.020 rad
+
+yaw uncertainty:
+  sqrt(0.0025) = 0.050 rad
+```
+
+This indicates that the system is relatively well constrained in `x`, `z`, `roll` and `pitch`, but is less well constrained in `y` and `yaw`. If `y` corresponds to the forward direction along a corridor, this would be consistent with reduced localisation confidence along the corridor axis.
+
+Useful scalar values can be derived from the covariance matrix, including:
+
+```text
+Position covariance trace:
+  Pxx + Pyy + Pzz
+
+Orientation covariance trace:
+  Prollroll + Ppitchpitch + Pyawyaw
+
+Maximum position variance:
+  max(Pxx, Pyy, Pzz)
+```
+
+For more advanced monitoring, the eigenvalues of the 3x3 position covariance block can be used. The largest eigenvalue indicates the direction of greatest position uncertainty.
+
+The 3x3 position covariance block is:
+
+```text
+P_position =
+[ Pxx  Pxy  Pxz
+  Pyx  Pyy  Pyz
+  Pzx  Pzy  Pzz ]
+```
+
+A large principal eigenvalue can indicate that the system is becoming poorly constrained in one direction, even if the overall position still appears visually reasonable.
+
+It should be noted that covariance is an estimator derived uncertainty metric. It is a useful indicator of localisation health, but it should not be treated as an absolute guarantee of mapping accuracy. For critical applications, covariance should be considered alongside other indicators such as visual map quality, odometry continuity, LiDAR visibility, and the presence of repeated scan warnings in the GeoMapper logs.
+
+RViz can be used to visualise odometry and pose covariance using an Odometry display. Foxglove Studio can be used to inspect the odometry message and covariance values, although covariance ellipsoid visualisation support may depend on the specific Foxglove version and layout configuration.
