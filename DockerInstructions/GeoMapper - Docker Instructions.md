@@ -436,4 +436,4 @@ A large principal eigenvalue can indicate that the system is becoming poorly con
 
 It should be noted that covariance is an estimator derived uncertainty metric. It is a useful indicator of localisation health, but it should not be treated as an absolute guarantee of mapping accuracy. For critical applications, covariance should be considered alongside other indicators such as visual map quality, odometry continuity, LiDAR visibility, and the presence of repeated scan warnings in the GeoMapper logs.
 
-RViz can be used to visualise odometry and pose covariance using an Odometry display. Foxglove Studio can be used to inspect the odometry message and covariance values, although covariance ellipsoid visualisation support may depend on the specific Foxglove version and layout configuration.
+RViz can also be used to visualise odometry and pose covariance using an Odometry display. Foxglove Studio can be used to inspect the odometry message and covariance values, although covariance ellipsoid visualisation support may depend on the specific Foxglove version and layout configuration.
